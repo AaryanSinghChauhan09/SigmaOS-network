@@ -1,0 +1,17 @@
+[package]
+name = "sigmaos-network"
+version = "0.1.0"
+edition = "2021"
+authors = ["SigmaOS Project"]
+description = "Network stack and management"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/AaryanSinghChauhan09/SigmaOS-network"
+readme = "README.md"
+keywords = ["network", "tcp", "wifi"]
+categories = ["network-programming"]
+
+[dependencies]
+sigmaos-kernel = { version = "0.1", path = "../SigmaOS-kernel" }
+
+[profile.release]
+opt-level = 3
