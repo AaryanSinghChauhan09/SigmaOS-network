@@ -70,18 +70,12 @@ pub struct SovereignWireGuardTunnel {
 
 impl SovereignWireGuardTunnel {
     pub fn new(ifname: &str, listen_port: u16) -> Self {
-        // Deterministic sovereign interface key generation (no external crypto crate)
-        let mut priv_key = [0u8; 32];
-        for (i, b) in ifname.as_bytes().iter().enumerate() {
-            priv_key[i % 32] ^= b;
-        }
-        let mut pub_key = priv_key;
-        pub_key.reverse(); // Simplified Curve25519 scalar multiplication representation
-
         SovereignWireGuardTunnel {
             ifname: ifname.to_string(),
-            private_key: priv_key,
-            public_key: pub_key,
+            // No cryptographic key generation is available. Zero values are
+            // placeholders and all handshake/transport operations fail closed.
+            private_key: [0; 32],
+            public_key: [0; 32],
             listen_port,
             peers: Vec::new(),
             next_index: 100,
@@ -94,75 +88,33 @@ impl SovereignWireGuardTunnel {
         self.peers.push(peer);
     }
 
-    /// Initiate Noise IK handshake with peer
+    /// Initiate a WireGuard handshake. Unavailable until a real Noise backend exists.
     pub fn initiate_handshake(
         &mut self,
-        peer_key: &[u8; 32],
-        current_tick: u64,
+        _peer_key: &[u8; 32],
+        _current_tick: u64,
     ) -> Result<u32, &'static str> {
-        let sender_idx = self.next_index;
-        self.next_index = self.next_index.saturating_add(1);
-
-        if let Some(peer) = self.peers.iter_mut().find(|p| &p.public_key == peer_key) {
-            peer.sender_index = sender_idx;
-            peer.session_state = WgSessionState::HandshakeInitiated;
-            peer.last_handshake_tick = current_tick;
-            Ok(sender_idx)
-        } else {
-            Err("Peer not found in cryptokey routing table")
-        }
+        Err("WireGuard cryptographic handshake backend is unavailable")
     }
 
-    /// Complete Noise IK handshake response
+    /// Complete a WireGuard handshake. Unavailable until a real Noise backend exists.
     pub fn complete_handshake(
         &mut self,
-        peer_key: &[u8; 32],
-        receiver_idx: u32,
+        _peer_key: &[u8; 32],
+        _receiver_idx: u32,
     ) -> Result<(), &'static str> {
-        if let Some(peer) = self.peers.iter_mut().find(|p| &p.public_key == peer_key) {
-            peer.receiver_index = receiver_idx;
-            peer.session_state = WgSessionState::Established;
-            Ok(())
-        } else {
-            Err("Peer not found in cryptokey routing table")
-        }
+        Err("WireGuard cryptographic handshake backend is unavailable")
     }
 
-    /// Encrypt and route outgoing packet via cryptokey routing
+    /// Encrypt and route an outgoing packet. Unavailable until authenticated
+    /// WireGuard transport encryption is implemented.
     pub fn encapsulate_and_send(
         &mut self,
-        dest_ip: &str,
-        payload: &[u8],
+        _dest_ip: &str,
+        _payload: &[u8],
     ) -> Result<Vec<u8>, &'static str> {
-        // Find matching peer by AllowedIPs
-        let peer_opt = self.peers.iter_mut().find(|p| {
-            p.allowed_ips
-                .iter()
-                .any(|allowed| allowed.starts_with(dest_ip) || dest_ip.starts_with(allowed))
-        });
-
-        if let Some(peer) = peer_opt {
-            if peer.session_state != WgSessionState::Established {
-                self.packets_dropped = self.packets_dropped.saturating_add(1);
-                return Err("WireGuard session not established");
-            }
-
-            peer.tx_bytes = peer.tx_bytes.saturating_add(payload.len() as u64);
-            self.packets_tunneled = self.packets_tunneled.saturating_add(1);
-
-            // Frame WireGuard transport data packet: type(4) + receiver_index + counter + payload + auth_tag(16)
-            let mut packet = Vec::with_capacity(payload.len() + 32);
-            packet.push(4u8); // WireGuard transport packet type
-            packet.extend_from_slice(&peer.receiver_index.to_le_bytes());
-            packet.extend_from_slice(&[0u8; 8]); // 64-bit nonce counter
-            packet.extend_from_slice(payload);
-            // 16-byte simulated Poly1305 AEAD authentication tag
-            packet.extend_from_slice(&[0x5A; 16]);
-            Ok(packet)
-        } else {
-            self.packets_dropped = self.packets_dropped.saturating_add(1);
-            Err("Cryptokey routing failure: No peer matched destination IP")
-        }
+        self.packets_dropped = self.packets_dropped.saturating_add(1);
+        Err("WireGuard authenticated transport backend is unavailable")
     }
 }
 
@@ -196,14 +148,12 @@ mod tests {
         let peer = WgPeer::new(peer_key, "10.10.10.1:51820", "10.0.0.5");
         tunnel.add_peer(peer);
 
-        let s_idx = tunnel.initiate_handshake(&peer_key, 1000).unwrap();
+        assert!(tunnel.initiate_handshake(&peer_key, 1000).is_err());
+        assert!(tunnel.complete_handshake(&peer_key, 1001).is_err());
         assert_eq!(
             tunnel.peers[0].session_state,
-            WgSessionState::HandshakeInitiated
+            WgSessionState::Unauthenticated
         );
-
-        assert!(tunnel.complete_handshake(&peer_key, s_idx + 1).is_ok());
-        assert_eq!(tunnel.peers[0].session_state, WgSessionState::Established);
     }
 
     #[test]
@@ -220,20 +170,17 @@ mod tests {
     }
 
     #[test]
-    fn test_wg_encapsulate_established_success() {
+    fn test_wg_encapsulate_fails_closed() {
         let mut tunnel = SovereignWireGuardTunnel::new("wg0", 51820);
         let peer_key = [0xCC; 32];
         let peer = WgPeer::new(peer_key, "10.0.0.1:51820", "10.0.0.4");
         tunnel.add_peer(peer);
-        tunnel.initiate_handshake(&peer_key, 100).unwrap();
-        tunnel.complete_handshake(&peer_key, 555).unwrap();
-
-        let res = tunnel
+        assert!(tunnel.initiate_handshake(&peer_key, 100).is_err());
+        assert!(tunnel.complete_handshake(&peer_key, 555).is_err());
+        assert!(tunnel
             .encapsulate_and_send("10.0.0.4", b"hello wireguard")
-            .unwrap();
-        assert_eq!(res[0], 4); // Transport packet
-        assert_eq!(tunnel.packets_tunneled, 1);
-        assert_eq!(tunnel.peers[0].tx_bytes, 15);
+            .is_err());
+        assert_eq!(tunnel.packets_tunneled, 0);
     }
 
     #[test]
