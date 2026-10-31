@@ -2,12 +2,6 @@
 
 Part of the SigmaOS multi-repository architecture.
 
-## Principles
-- MODULARITY: Single responsibility per repository
-- LOOSE COUPLING: Minimal dependencies between repos
-- INTERFACE SEGREGATION: Clear, focused public APIs
-- DETERMINISTIC TESTING: Comprehensive test coverage
-
 ## WireGuard status
 
 The exported WireGuard tunnel types are scaffolds, not secure VPNs. They do
