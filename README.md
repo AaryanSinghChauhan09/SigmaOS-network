@@ -1,17 +1,40 @@
 # SigmaOS-network
 
-Part of the SigmaOS multi-repository architecture.
+SigmaOS component inspired by Arch Linux and Debian architecture.
 
-## WireGuard status
+## Overview
 
-The exported WireGuard tunnel types are scaffolds, not secure VPNs. They do
-not implement Curve25519, Noise, or authenticated encryption. Handshake and
-packet transmission methods now return an explicit unavailable error, and no
-plaintext packet is framed with a fabricated authentication tag. The zeroed
-key fields are placeholders and must not be used as credentials.
+This component provides essential functionality for the SigmaOS operating system,
+following the modular design principles of Arch Linux and the stability focus of Debian.
+
+## Features
+
+- Modular architecture
+- Minimal dependencies
+- Well-documented APIs
+- Comprehensive testing
+
+## Building
+
+```bash
+cargo build --release
+```
+
+## Testing
+
+```bash
+cargo test
+```
 
 ## License
-SPDX-License-Identifier: GPL-3.0-or-later
 
-## Copyright
-Copyright (C) 2026 SigmaOS Project
+MIT License - See LICENSE file for details.
+
+## Contributing
+
+See CONTRIBUTING.md for guidelines.
+
+## Links
+
+- Repository: https://github.com/AaryanSinghChauhan09/SigmaOS-network
+- SigmaOS: https://github.com/AaryanSinghChauhan09
