@@ -11,6 +11,8 @@ keywords = ["network", "tcp", "wifi"]
 categories = ["network-programming"]
 
 [dependencies]
+toml = "0.8"
+thiserror = "1.0"
 sigmaos-kernel = { version = "0.1", path = "../SigmaOS-kernel" }
 
 [profile.release]
