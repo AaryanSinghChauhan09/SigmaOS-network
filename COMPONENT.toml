@@ -1,0 +1,16 @@
+[component]
+name = "SigmaOS-network"
+tier = 1
+stability = "scaffold"
+language = "rust"
+description = "High-performance zero-copy network stack supporting TCP/IP, UDP, ARP, and network interface controllers"
+upstream = ["https://github.com/smoltcp-rs/smoltcp"]
+
+[contract]
+provides = ["tcp-ip-stack", "arp-resolver", "nic-controller"]
+depends_on = []
+
+[maturity]
+status = "Scaffold"
+test_evidence = "Compiles and passes AAA unit tests"
+next_milestone = "Hardware and runtime integration"
