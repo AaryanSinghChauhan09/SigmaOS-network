@@ -2,8 +2,11 @@
 name = "sigmaos_network"
 version = "0.1.0"
 edition = "2021"
-description = "High-performance zero-copy network stack supporting TCP/IP, UDP, ARP, and network interface controllers"
+description = "SigmaOS network stack: IPv4/IPv6, TCP/UDP, sockets, routing, ARP"
 
 [lib]
 name = "sigmaos_network"
 path = "src/lib.rs"
+
+[dependencies]
+bitflags = "2.5"

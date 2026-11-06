@@ -1,30 +1,21 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum IpProtocol { Tcp, Udp, Icmp }
+//! SigmaOS-network — network stack model.
+//!
+//! Models a Unix-style network stack: IPv4/IPv6 packet formats, TCP/UDP
+//! transport layers, socket model, routing table, network interfaces,
+//! and ARP resolution. Deterministic and std-only (no actual syscalls).
 
-#[derive(Debug)]
-pub struct IpPacketHeader {
-    pub protocol: IpProtocol,
-    pub source_ip: [u8; 4],
-    pub dest_ip: [u8; 4],
-}
+pub mod ip;
+pub mod tcp;
+pub mod udp;
+pub mod socket;
+pub mod route;
+pub mod iface;
+pub mod arp;
 
-pub struct NetworkStack;
-impl NetworkStack {
-    pub fn validate_header(hdr: &IpPacketHeader) -> bool {
-        hdr.source_ip != [0, 0, 0, 0] && hdr.dest_ip != [0, 0, 0, 0]
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn test_network_packet_header_validation() {
-        let hdr = IpPacketHeader {
-            protocol: IpProtocol::Tcp,
-            source_ip: [192, 168, 1, 5],
-            dest_ip: [192, 168, 1, 1],
-        };
-        assert!(NetworkStack::validate_header(&hdr));
-    }
-}
+pub use ip::{IpAddr, IpHeader, IpPacket, IpVersion};
+pub use tcp::{TcpHeader, TcpFlags, TcpSegment};
+pub use udp::{UdpHeader, UdpPacket};
+pub use socket::{Socket, SocketState, SocketKind};
+pub use route::{Route, RouteTable};
+pub use iface::{Interface, MacAddr};
+pub use arp::{ArpEntry, ArpTable};
