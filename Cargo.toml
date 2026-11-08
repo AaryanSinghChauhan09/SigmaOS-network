@@ -2,11 +2,9 @@
 name = "sigmaos_network"
 version = "0.1.0"
 edition = "2021"
-description = "SigmaOS network stack: IPv4/IPv6, TCP/UDP, sockets, routing, ARP"
+license = "MIT"
+description = "SigmaOS network component inspired by Linux Mint / Omarchy / Arch Linux."
 
 [lib]
 name = "sigmaos_network"
 path = "src/lib.rs"
-
-[dependencies]
-bitflags = "2.5"
