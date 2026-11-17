@@ -3,12 +3,12 @@ name = "SigmaOS-network"
 tier = 1
 stability = "scaffold"
 language = "rust"
-description = "High-performance zero-copy network stack supporting TCP/IP, UDP, ARP, and network interface controllers"
+description = "Networking stack: TCP/IP, TLS, mDNS discovery"
 upstream = ["https://github.com/smoltcp-rs/smoltcp"]
 
 [contract]
 provides = ["tcp-ip-stack", "arp-resolver", "nic-controller"]
-depends_on = []
+depends_on = ["SigmaOS-kernel"]
 
 [maturity]
 status = "Scaffold"
